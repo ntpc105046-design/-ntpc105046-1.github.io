@@ -76,7 +76,7 @@
         #overlay {
             position: absolute;
             inset: 0;
-            background: rgba(2, 6, 23, 0.9);
+            background: rgba(2, 6, 23, 0.85);
             display: none;
             flex-direction: column;
             align-items: center;
@@ -86,17 +86,29 @@
             padding: 20px;
             text-align: center;
         }
-        .celebration-text {
+        .birthday-text {
             background: linear-gradient(to right, #fbbf24, #f472b6, #60a5fa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 900;
-            text-shadow: 0 0 30px rgba(244, 114, 182, 0.5);
+            font-size: 3.5rem;
+            text-shadow: 0 0 30px rgba(244, 114, 182, 0.4);
             animation: pulse 1.5s infinite;
+            margin-bottom: 2rem;
+        }
+        #reset-btn {
+            background: linear-gradient(to right, #f472b6, #e11d48);
+            padding: 1rem 3.5rem;
+            border-radius: 9999px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.1s;
         }
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.05); }
         }
     </style>
 </head>
@@ -110,12 +122,11 @@
     </div>
 
     <div id="overlay">
-        <h2 id="msg-top" class="text-3xl font-black mb-2 tracking-widest"></h2>
-        <h1 id="birthday-msg" class="text-6xl font-black mb-8 celebration-text"></h1>
-        <p id="msg-bottom" class="text-xl opacity-80 mb-10 font-bold"></p>
-        <button id="reset-btn" class="bg-gradient-to-r from-pink-500 to-rose-600 px-16 py-4 rounded-full text-2xl font-bold shadow-2xl active:scale-95 border-2 border-white">
-            再應戰一次
-        </button>
+        <!-- 只有勝利時會顯示此區塊 -->
+        <div id="win-content" class="hidden">
+            <h1 class="birthday-text">祝 Sam 生日快樂！</h1>
+        </div>
+        <button id="reset-btn">再應戰一次</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -127,12 +138,9 @@
         const joyHandle = document.getElementById('joy-handle');
         const jumpBtn = document.getElementById('jump-btn');
         const overlay = document.getElementById('overlay');
-        const msgTop = document.getElementById('msg-top');
-        const birthdayMsg = document.getElementById('birthday-msg');
-        const msgBottom = document.getElementById('msg-bottom');
+        const winContent = document.getElementById('win-content');
         const resetBtn = document.getElementById('reset-btn');
 
-        // 物理配置
         const GRAVITY = 0.65;
         const JUMP_FORCE = -13.5;
         const SPEED = 5.5;
@@ -144,7 +152,6 @@
         let goal = { x: 0, y: 0, w: 8, h: 80 };
         let joystickTouchId = null;
 
-        // 煙火系統
         let fireworks = [];
         let particles = [];
 
@@ -152,9 +159,9 @@
             constructor() {
                 this.x = Math.random() * canvas.width;
                 this.y = canvas.height;
-                this.targetY = Math.random() * (canvas.height * 0.5);
-                this.speed = 8 + Math.random() * 5;
-                this.color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+                this.targetY = Math.random() * (canvas.height * 0.45);
+                this.speed = 9 + Math.random() * 5;
+                this.color = `hsl(${Math.random() * 360}, 100%, 65%)`;
                 this.alive = true;
             }
             update() {
@@ -171,7 +178,7 @@
                 ctx.fill();
             }
             explode() {
-                for (let i = 0; i < 50; i++) {
+                for (let i = 0; i < 60; i++) {
                     particles.push(new Particle(this.x, this.y, this.color));
                 }
             }
@@ -183,16 +190,16 @@
                 this.y = y;
                 this.color = color;
                 const angle = Math.random() * Math.PI * 2;
-                const force = Math.random() * 6;
+                const force = Math.random() * 7;
                 this.vx = Math.cos(angle) * force;
                 this.vy = Math.sin(angle) * force;
                 this.alpha = 1;
-                this.decay = 0.015 + Math.random() * 0.02;
+                this.decay = 0.01 + Math.random() * 0.02;
             }
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vy += 0.1;
+                this.vy += 0.12;
                 this.alpha -= this.decay;
             }
             draw() {
@@ -277,6 +284,7 @@
             isWin = false;
         }
 
+        // 觸控邏輯
         joyBase.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.changedTouches[0];
@@ -318,15 +326,9 @@
             isWin = win;
             overlay.style.display = 'flex';
             if (win) {
-                msgTop.innerText = "✨ CHALLENGE COMPLETE ✨";
-                birthdayMsg.innerText = "祝 Sam 生日快樂！";
-                msgBottom.innerText = "你是這座高峰的征服者！";
-                msgTop.style.color = "#fbbf24";
+                winContent.classList.remove('hidden');
             } else {
-                msgTop.innerText = "❌ 挑戰失敗";
-                birthdayMsg.innerText = "不要放棄，Sam！";
-                msgBottom.innerText = "再試一次吧！";
-                msgTop.style.color = "#f43f5e";
+                winContent.classList.add('hidden');
             }
         }
 
@@ -341,7 +343,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             if (isWin) {
-                if (Math.random() < 0.05) fireworks.push(new Firework());
+                if (Math.random() < 0.08) fireworks.push(new Firework());
                 fireworks = fireworks.filter(f => f.alive);
                 fireworks.forEach(f => { f.update(); f.draw(); });
                 particles = particles.filter(p => p.alpha > 0);
