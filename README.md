@@ -1,293 +1,398 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>星際守護者 - 驚喜保險版</title>
+    <title>極限跳躍 - Sam 生日快樂</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --primary: #00f2ff; --boss: #ff3e3e; --bg: #050510; }
-        body { margin: 0; background: var(--bg); color: white; font-family: sans-serif; overflow: hidden; touch-action: none; }
-        #game-container { position: relative; width: 100vw; height: 100vh; }
-        canvas { display: block; }
-
-        #ui {
-            position: absolute; top: 10px; width: 100%;
-            display: flex; justify-content: space-around; pointer-events: none; z-index: 100;
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #020617;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            touch-action: none;
+            user-select: none;
         }
-        .stat { background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--primary); font-size: 14px; }
-
-        #msg-box {
-            position: absolute; inset: 0; display: none;
-            flex-direction: column; justify-content: center; align-items: center;
-            background: rgba(0,0,0,0.8); z-index: 9999; text-align: center;
-            animation: fadeIn 1s forwards;
+        canvas {
+            display: block;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        .bday-text {
-            font-size: 42px; font-weight: bold;
-            background: linear-gradient(to right, #ff00ea, #00f2ff, #ffff00);
-            -webkit-background-clip: text; color: transparent;
-            text-shadow: 0 0 20px rgba(255,255,255,0.5);
-            margin-bottom: 20px;
+        .controls-container {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            right: 0;
+            height: 160px;
+            z-index: 100;
+            pointer-events: none;
         }
-
-        #boss-hp {
-            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-            width: 200px; height: 10px; background: #333; border: 2px solid white;
-            display: none; z-index: 50;
+        .joy-container {
+            position: absolute;
+            left: 40px;
+            bottom: 20px;
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
         }
-        #hp-bar { width: 100%; height: 100%; background: red; }
-
-        .modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #111; border: 2px solid var(--primary); padding: 20px;
-            display: none; flex-direction: column; gap: 10px; z-index: 500;
+        .joy-handle {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            pointer-events: none;
         }
-        .btn { padding: 10px; background: #222; border: 1px solid #555; color: white; cursor: pointer; }
-        .btn:active { background: var(--primary); color: black; }
+        .jump-container {
+            position: absolute;
+            right: 40px;
+            bottom: 20px;
+            width: 110px;
+            height: 110px;
+            background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+            border: 4px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 1.4rem;
+            pointer-events: auto;
+            box-shadow: 0 8px 0 #831843;
+            transition: transform 0.05s;
+        }
+        .jump-container:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #831843;
+        }
+        #overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 200;
+            padding: 20px;
+            text-align: center;
+        }
+        .celebration-text {
+            background: linear-gradient(to right, #fbbf24, #f472b6, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            text-shadow: 0 0 30px rgba(244, 114, 182, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="ui">
-        <div class="stat">等級: <span id="lv-v">1</span></div>
-        <div class="stat">得分: <span id="sc-v">0</span></div>
-        <div class="stat">生命: <span id="hp-v">100</span>%</div>
+    <div class="controls-container">
+        <div id="joy-base" class="joy-container">
+            <div id="joy-handle" class="joy-handle"></div>
+        </div>
+        <div id="jump-btn" class="jump-container">JUMP</div>
     </div>
 
-    <div id="boss-hp"><div id="hp-bar"></div></div>
-
-    <div id="msg-box">
-        <div class="bday-text">Happy Birthday<br>Sam! 🎂</div>
-        <div style="font-size: 18px; color: #fff;">你成功守護了星系！</div>
-        <button class="btn" style="margin-top:30px; border-radius:20px; padding:10px 30px;" onclick="location.reload()">再玩一次</button>
+    <div id="overlay">
+        <h2 id="msg-top" class="text-3xl font-black mb-2 tracking-widest"></h2>
+        <h1 id="birthday-msg" class="text-6xl font-black mb-8 celebration-text"></h1>
+        <p id="msg-bottom" class="text-xl opacity-80 mb-10 font-bold"></p>
+        <button id="reset-btn" class="bg-gradient-to-r from-pink-500 to-rose-600 px-16 py-4 rounded-full text-2xl font-bold shadow-2xl active:scale-95 border-2 border-white">
+            再應戰一次
+        </button>
     </div>
 
-    <div id="lv-modal" class="modal">
-        <h3 style="text-align:center">升級武器</h3>
-        <button class="btn" onclick="upgrade('b')">增加子彈數量</button>
-        <button class="btn" onclick="upgrade('s')">提升射速</button>
-        <button class="btn" onclick="upgrade('d')">提升傷害</button>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 
-    <div id="menu" style="position:absolute; inset:0; background:rgba(0,0,0,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:1000;">
-        <h1 style="color:var(--primary); text-shadow:0 0 10px var(--primary)">星際守護者</h1>
-        <p style="color:#aaa">目標：10,000 分觸發驚喜</p>
-        <button class="btn" style="padding:15px 40px; font-size:20px; border-radius:30px; color:var(--primary); border-color:var(--primary)" onclick="start()">開始戰鬥</button>
-    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const joyBase = document.getElementById('joy-base');
+        const joyHandle = document.getElementById('joy-handle');
+        const jumpBtn = document.getElementById('jump-btn');
+        const overlay = document.getElementById('overlay');
+        const msgTop = document.getElementById('msg-top');
+        const birthdayMsg = document.getElementById('birthday-msg');
+        const msgBottom = document.getElementById('msg-bottom');
+        const resetBtn = document.getElementById('reset-btn');
 
-    <canvas id="canvas"></canvas>
-</div>
-
-<script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const ui = {
-        lv: document.getElementById('lv-v'), sc: document.getElementById('sc-v'),
-        hp: document.getElementById('hp-v'), bhp: document.getElementById('boss-hp'),
-        hbar: document.getElementById('hp-bar'), msg: document.getElementById('msg-box'),
-        modal: document.getElementById('lv-modal'), menu: document.getElementById('menu')
-    };
-
-    let state = { running: false, paused: false, score: 0, hp: 100, lv: 1, exp: 0, next: 100, win: false };
-    let player = { x: 0, y: 0, r: 15, tx: 0, ty: 0, down: false };
-    let weapon = { count: 1, speed: 20, dmg: 2 };
-    let enemies = [], bullets = [], eb = [], gems = [], boss = null, frames = 0;
-
-    function init() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        player.x = canvas.width / 2;
-        player.y = canvas.height * 0.8;
-    }
-
-    function start() {
-        ui.menu.style.display = 'none';
-        state.running = true;
-        loop();
-    }
-
-    function upgrade(t) {
-        if(t==='b') weapon.count++;
-        if(t==='s') weapon.speed = Math.max(5, weapon.speed - 3);
-        if(t==='d') weapon.dmg += 1;
-        state.paused = false;
-        ui.modal.style.display = 'none';
-    }
-
-    // 觸控邏輯
-    const handleTouch = (e) => {
-        const t = e.touches ? e.touches[0] : e;
-        if(e.type === 'touchstart' || e.type === 'mousedown') {
-            player.down = true;
-            player.tx = t.clientX; player.ty = t.clientY;
-        } else if(e.type === 'touchmove' || e.type === 'mousemove') {
-            if(!player.down || state.paused) return;
-            player.x = Math.max(15, Math.min(canvas.width-15, player.x + (t.clientX - player.tx)));
-            player.y = Math.max(100, Math.min(canvas.height-15, player.y + (t.clientY - player.ty)));
-            player.tx = t.clientX; player.ty = t.clientY;
-        } else {
-            player.down = false;
-        }
-    };
-    window.addEventListener('touchstart', handleTouch);
-    window.addEventListener('touchmove', (e) => { e.preventDefault(); handleTouch(e); }, {passive: false});
-    window.addEventListener('touchend', handleTouch);
-    window.addEventListener('mousedown', handleTouch);
-    window.addEventListener('mousemove', handleTouch);
-    window.addEventListener('mouseup', handleTouch);
-
-    function loop() {
-        if(!state.running) return;
-        if(!state.paused && !state.win) {
-            frames++;
-            
-            // 驚喜判斷 - 強力保險版
-            if(state.score >= 10000) {
-                state.win = true;
-                enemies = []; bullets = []; eb = []; boss = null;
-                ui.msg.style.display = 'flex';
-                ui.bhp.style.display = 'none';
-            }
-
-            // 射擊
-            if(frames % weapon.speed === 0) {
-                for(let i=0; i<weapon.count; i++) {
-                    bullets.push({ x: player.x + (i - (weapon.count-1)/2)*10, y: player.y - 15 });
-                }
-            }
-
-            // 移動子彈
-            for(let i=bullets.length-1; i>=0; i--) {
-                bullets[i].y -= 10;
-                if(bullets[i].y < -20) bullets.splice(i, 1);
-            }
-
-            // 敵機生成
-            if(!boss && frames % 40 === 0) {
-                enemies.push({ x: Math.random()*(canvas.width-40), y: -50, w: 40, h: 30, hp: 2 + state.lv });
-            }
-
-            // 敵機邏輯
-            for(let i=enemies.length-1; i>=0; i--) {
-                const e = enemies[i]; e.y += 3;
-                if(e.y > canvas.height) { enemies.splice(i, 1); continue; }
-
-                // 撞玩家
-                if(Math.hypot(e.x+20-player.x, e.y+15-player.y) < 30) {
-                    state.hp -= 10; enemies.splice(i, 1);
-                    if(state.hp <= 0) location.reload();
-                    continue;
-                }
-
-                // 被子彈打
-                for(let j=bullets.length-1; j>=0; j--) {
-                    const b = bullets[j];
-                    if(b.x > e.x && b.x < e.x+e.w && b.y > e.y && b.y < e.y+e.h) {
-                        e.hp -= weapon.dmg; bullets.splice(j, 1);
-                        if(e.hp <= 0) {
-                            state.score += 100;
-                            gems.push({x: e.x+20, y: e.y+15});
-                            enemies.splice(i, 1);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // 寶石邏輯
-            for(let i=gems.length-1; i>=0; i--) {
-                const g = gems[i]; g.y += 2;
-                if(Math.hypot(g.x-player.x, g.y-player.y) < 30) {
-                    state.exp += 25; gems.splice(i, 1);
-                    if(state.exp >= state.next) {
-                        state.lv++; state.exp = 0; state.next *= 1.5;
-                        state.paused = true; ui.modal.style.display = 'flex';
-                    }
-                } else if(g.y > canvas.height) gems.splice(i, 1);
-            }
-
-            // Boss 邏輯
-            if(!boss && state.score >= 8000 && !state.win) {
-                boss = { x: canvas.width/2-50, y: -100, w: 100, h: 80, hp: 500, mhp: 500, vx: 2 };
-                ui.bhp.style.display = 'block';
-            }
-            if(boss) {
-                if(boss.y < 100) boss.y += 1;
-                else {
-                    boss.x += boss.vx;
-                    if(boss.x < 0 || boss.x > canvas.width-boss.w) boss.vx *= -1;
-                    if(frames % 50 === 0) eb.push({x: boss.x+50, y: boss.y+80});
-                }
-                for(let i=bullets.length-1; i>=0; i--) {
-                    const b = bullets[i];
-                    if(b.x > boss.x && b.x < boss.x+boss.w && b.y > boss.y && b.y < boss.y+boss.h) {
-                        boss.hp -= weapon.dmg; bullets.splice(i, 1);
-                        if(boss.hp <= 0) {
-                            state.score += 2000; boss = null; ui.bhp.style.display = 'none';
-                        }
-                    }
-                }
-                if(boss) ui.hbar.style.width = (boss.hp/boss.mhp*100) + '%';
-            }
-
-            // 敵方子彈
-            for(let i=eb.length-1; i>=0; i--) {
-                eb[i].y += 5;
-                if(Math.hypot(eb[i].x-player.x, eb[i].y-player.y) < 20) {
-                    state.hp -= 15; eb.splice(i, 1);
-                    if(state.hp <= 0) location.reload();
-                } else if(eb[i].y > canvas.height) eb.splice(i, 1);
-            }
-
-            // UI 更新
-            ui.sc.innerText = state.score;
-            ui.lv.innerText = state.lv;
-            ui.hp.innerText = Math.max(0, state.hp);
-        }
-
-        draw();
-        requestAnimationFrame(loop);
-    }
-
-    function draw() {
-        ctx.fillStyle = '#050510'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        // 物理配置
+        const GRAVITY = 0.65;
+        const JUMP_FORCE = -13.5;
+        const SPEED = 5.5;
         
-        // 玩家 (青色三角)
-        ctx.fillStyle = '#00f2ff';
-        ctx.beginPath();
-        ctx.moveTo(player.x, player.y-15);
-        ctx.lineTo(player.x+15, player.y+15);
-        ctx.lineTo(player.x-15, player.y+15);
-        ctx.fill();
+        let isRunning = true;
+        let isWin = false;
+        let inputX = 0;
+        let platforms = [];
+        let goal = { x: 0, y: 0, w: 8, h: 80 };
+        let joystickTouchId = null;
 
-        // 子彈
-        ctx.fillStyle = '#fff';
-        bullets.forEach(b => ctx.fillRect(b.x-2, b.y, 4, 10));
+        // 煙火系統
+        let fireworks = [];
+        let particles = [];
 
-        // 敵機 (紫色方塊)
-        ctx.fillStyle = '#a040ff';
-        enemies.forEach(e => ctx.fillRect(e.x, e.y, e.w, e.h));
-
-        // 寶石 (黃色點)
-        ctx.fillStyle = '#ffff00';
-        gems.forEach(g => ctx.beginPath() || ctx.arc(g.x, g.y, 5, 0, 7) || ctx.fill());
-
-        // Boss (紅巨星)
-        if(boss) {
-            ctx.fillStyle = 'red'; ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
-            ctx.fillStyle = 'white'; ctx.fillRect(boss.x+15, boss.y+15, 20, 20); ctx.fillRect(boss.x+65, boss.y+15, 20, 20);
+        class Firework {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height;
+                this.targetY = Math.random() * (canvas.height * 0.5);
+                this.speed = 8 + Math.random() * 5;
+                this.color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+                this.alive = true;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y <= this.targetY) {
+                    this.explode();
+                    this.alive = false;
+                }
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            explode() {
+                for (let i = 0; i < 50; i++) {
+                    particles.push(new Particle(this.x, this.y, this.color));
+                }
+            }
         }
 
-        // 敵彈
-        ctx.fillStyle = '#ff0000';
-        eb.forEach(b => ctx.beginPath() || ctx.arc(b.x, b.y, 8, 0, 7) || ctx.fill());
-    }
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const force = Math.random() * 6;
+                this.vx = Math.cos(angle) * force;
+                this.vy = Math.sin(angle) * force;
+                this.alpha = 1;
+                this.decay = 0.015 + Math.random() * 0.02;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
 
-    window.addEventListener('resize', init);
-    init();
-</script>
+        const player = {
+            x: 0, y: 0, w: 32, h: 48, vx: 0, vy: 0, grounded: false,
+            color: '#f472b6',
+            update() {
+                this.vx = inputX * SPEED;
+                this.vy += GRAVITY;
+                this.x += this.vx;
+                this.resolveCollision('x');
+                this.y += this.vy;
+                this.resolveCollision('y');
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
+                if (this.y > canvas.height) finish(false);
+            },
+            resolveCollision(axis) {
+                this.grounded = false;
+                for (let p of platforms) {
+                    if (this.x < p.x + p.w && this.x + this.w > p.x &&
+                        this.y < p.y + p.h && this.y + this.h > p.y) {
+                        if (axis === 'x') {
+                            if (this.vx > 0) this.x = p.x - this.w;
+                            if (this.vx < 0) this.x = p.x + p.w;
+                        } else {
+                            if (this.vy > 0) {
+                                this.y = p.y - this.h;
+                                this.vy = 0;
+                                this.grounded = true;
+                            } else if (this.vy < 0) {
+                                this.y = p.y + p.h;
+                                this.vy = 0;
+                            }
+                        }
+                    }
+                }
+            },
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.w, this.h, 8);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                const eyeX = inputX >= 0 ? this.x + this.w - 10 : this.x + 2;
+                ctx.fillRect(eyeX, this.y + 12, 8, 8);
+            }
+        };
+
+        function init() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const w = canvas.width;
+            const h = canvas.height;
+            platforms = [
+                { x: 30, y: h - 120, w: 180, h: 120, type: 'main' },
+                { x: 250, y: h - 210, w: 80, h: 25, type: 'box' },
+                { x: 100, y: h - 305, w: 80, h: 25, type: 'box' },
+                { x: 280, y: h - 400, w: 80, h: 25, type: 'box' },
+                { x: 120, y: h - 495, w: 80, h: 25, type: 'box' },
+                { x: w * 0.45, y: h - 550, w: 120, h: 25, type: 'box' },
+                { x: w - 280, y: h * 0.42, w: 70, h: 25, type: 'box' },
+                { x: w - 160, y: h * 0.25, w: 160, h: 30, type: 'main' }
+            ];
+            goal = { x: w - 70, y: h * 0.25 - 80, w: 8, h: 80 };
+            player.x = 60;
+            player.y = h - 180;
+            player.vx = 0;
+            player.vy = 0;
+            fireworks = [];
+            particles = [];
+            isWin = false;
+        }
+
+        joyBase.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.changedTouches[0];
+            joystickTouchId = touch.identifier;
+            updateJoystick(touch);
+        }, { passive: false });
+        window.addEventListener('touchmove', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === joystickTouchId) updateJoystick(touch);
+            }
+        }, { passive: false });
+        window.addEventListener('touchend', (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joystickTouchId) {
+                    joystickTouchId = null;
+                    inputX = 0;
+                    joyHandle.style.transform = 'translate(-50%, -50%)';
+                }
+            }
+        });
+        function updateJoystick(touch) {
+            const rect = joyBase.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const dist = touch.clientX - centerX;
+            const limit = rect.width / 2;
+            const clamped = Math.max(-limit, Math.min(limit, dist));
+            joyHandle.style.transform = `translate(calc(-50% + ${clamped}px), -50%)`;
+            inputX = clamped / limit;
+        }
+        jumpBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (player.grounded) player.vy = JUMP_FORCE;
+        }, { passive: false });
+        jumpBtn.addEventListener('mousedown', () => { if (player.grounded) player.vy = JUMP_FORCE; });
+
+        function finish(win) {
+            isRunning = false;
+            isWin = win;
+            overlay.style.display = 'flex';
+            if (win) {
+                msgTop.innerText = "✨ CHALLENGE COMPLETE ✨";
+                birthdayMsg.innerText = "祝 Sam 生日快樂！";
+                msgBottom.innerText = "你是這座高峰的征服者！";
+                msgTop.style.color = "#fbbf24";
+            } else {
+                msgTop.innerText = "❌ 挑戰失敗";
+                birthdayMsg.innerText = "不要放棄，Sam！";
+                msgBottom.innerText = "再試一次吧！";
+                msgTop.style.color = "#f43f5e";
+            }
+        }
+
+        resetBtn.onclick = () => {
+            init();
+            isRunning = true;
+            overlay.style.display = 'none';
+            gameLoop();
+        };
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (isWin) {
+                if (Math.random() < 0.05) fireworks.push(new Firework());
+                fireworks = fireworks.filter(f => f.alive);
+                fireworks.forEach(f => { f.update(); f.draw(); });
+                particles = particles.filter(p => p.alpha > 0);
+                particles.forEach(p => { p.update(); p.draw(); });
+            }
+
+            ctx.fillStyle = 'rgba(244, 114, 182, 0.05)';
+            for(let i=0; i<canvas.width; i+=100) {
+                for(let j=0; j<canvas.height; j+=100) {
+                    ctx.beginPath();
+                    ctx.arc(i + Math.cos(Date.now()*0.001 + j)*10, j, 1, 0, Math.PI*2);
+                    ctx.fill();
+                }
+            }
+
+            platforms.forEach(p => {
+                ctx.fillStyle = p.type === 'main' ? '#0f172a' : '#1e293b';
+                ctx.beginPath();
+                ctx.roundRect(p.x, p.y, p.w, p.h, 6);
+                ctx.fill();
+                ctx.fillStyle = '#f472b6';
+                ctx.fillRect(p.x, p.y, p.w, 4);
+            });
+
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
+            ctx.beginPath();
+            ctx.moveTo(goal.x + goal.w, goal.y);
+            ctx.lineTo(goal.x + goal.w + 35, goal.y + 25);
+            ctx.lineTo(goal.x + goal.w, goal.y + 50);
+            ctx.fill();
+
+            player.draw();
+        }
+
+        function gameLoop() {
+            if (!isRunning && !isWin) return;
+            if (isRunning) player.update();
+            render();
+            if (isRunning && player.x + player.w > goal.x && 
+                player.x < goal.x + 40 && 
+                player.y < goal.y + goal.h && 
+                player.y + player.h > goal.y) {
+                finish(true);
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('resize', init);
+        init();
+        gameLoop();
+    </script>
 </body>
 </html>
