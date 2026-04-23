@@ -11,7 +11,7 @@
             --health-color: #2ecc71;
             --boss-color: #ff3e3e;
             --exp-color: #f1c40f;
-            --bg-color: #0b0b1a;
+            --bg-color: #050510;
         }
 
         body {
@@ -19,7 +19,7 @@
             padding: 0;
             background-color: var(--bg-color);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
             touch-action: none;
             width: 100vw;
@@ -33,11 +33,11 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            background: radial-gradient(circle at center, #1a1a3a 0%, #050510 100%);
         }
 
         canvas {
             display: block;
-            background: #000;
         }
 
         #ui-layer {
@@ -45,12 +45,13 @@
             top: 0;
             left: 0;
             width: 100%;
-            padding: env(safe-area-inset-top, 20px) 15px 10px 15px;
+            padding: 15px;
             pointer-events: none;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             box-sizing: border-box;
+            z-index: 10;
         }
 
         .stats-row {
@@ -61,120 +62,94 @@
         }
 
         .stat-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 6px 12px;
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 242, 255, 0.3);
             font-weight: bold;
             font-size: 14px;
-            white-space: nowrap;
+            color: white;
+            min-width: 80px;
+            text-align: center;
         }
 
         .exp-bar-container {
             width: 100%;
-            height: 6px;
+            height: 8px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
+            border-radius: 4px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         #exp-fill {
             width: 0%;
             height: 100%;
             background: var(--exp-color);
-            box-shadow: 0 0 8px var(--exp-color);
+            box-shadow: 0 0 10px var(--exp-color);
             transition: width 0.3s ease;
         }
 
+        /* 升級視窗 */
         .modal {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(10, 10, 25, 0.98);
+            background: rgba(10, 10, 30, 0.95);
             border: 2px solid var(--primary-color);
-            padding: 25px;
+            padding: 20px;
             border-radius: 20px;
             display: none;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             width: 85%;
-            max-width: 320px;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+            max-width: 300px;
             z-index: 100;
-            box-sizing: border-box;
         }
 
         .skill-option {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
             border-radius: 12px;
             cursor: pointer;
             pointer-events: auto;
+            border: 1px solid transparent;
         }
+        .skill-option:active { background: rgba(0, 242, 255, 0.2); border-color: var(--primary-color); }
+        .skill-name { color: var(--primary-color); font-weight: bold; font-size: 16px; display: block; }
+        .skill-desc { font-size: 12px; opacity: 0.8; }
 
-        .skill-name { color: var(--primary-color); font-weight: bold; margin-bottom: 3px; display: block; font-size: 16px; }
-        .skill-desc { font-size: 13px; opacity: 0.8; }
-
+        /* Boss UI */
         #boss-ui {
             position: absolute;
-            top: 80px;
+            top: 90px;
             left: 50%;
             transform: translateX(-50%);
-            width: 80%;
+            width: 70%;
             display: none;
+            text-align: center;
         }
-
-        .boss-name { text-align: center; color: var(--boss-color); font-size: 12px; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
-        .boss-hp-bar { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; border: 1px solid var(--boss-color); }
-        #boss-hp-fill { width: 100%; height: 100%; background: var(--boss-color); }
+        .boss-hp-bar { width: 100%; height: 10px; background: rgba(0,0,0,0.5); border: 1px solid var(--boss-color); border-radius: 5px; }
+        #boss-hp-fill { width: 100%; height: 100%; background: var(--boss-color); transition: width 0.1s linear; }
 
         #overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 200;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
         }
 
-        h1 { font-size: 2.5em; margin-bottom: 30px; color: var(--primary-color); text-shadow: 0 0 15px var(--primary-color); }
-        
         .start-btn {
-            padding: 15px 40px;
-            font-size: 1.2em;
-            background: transparent;
-            color: var(--primary-color);
-            border: 2px solid var(--primary-color);
-            border-radius: 30px;
-            cursor: pointer;
-            pointer-events: auto;
+            padding: 15px 40px; font-size: 1.2em; background: transparent;
+            color: var(--primary-color); border: 2px solid var(--primary-color);
+            border-radius: 30px; cursor: pointer; pointer-events: auto;
         }
 
         #birthday-msg {
-            position: absolute;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2.5em;
-            font-weight: bold;
-            color: var(--secondary-color);
-            text-shadow: 0 0 20px var(--secondary-color);
-            display: none;
-            z-index: 50;
-            width: 100%;
-            text-align: center;
+            position: absolute; top: 30%; width: 100%; text-align: center;
+            font-size: 2em; color: var(--secondary-color); display: none;
+            text-shadow: 0 0 15px var(--secondary-color); font-weight: bold;
         }
     </style>
 </head>
@@ -194,33 +169,32 @@
         </div>
         
         <div id="boss-ui">
-            <div class="boss-name">BOSS APPROACHING</div>
-            <div class="boss-hp-bar">
-                <div id="boss-hp-fill"></div>
-            </div>
+            <div style="color:red; font-size:12px; margin-bottom:4px; font-weight:bold;">警告：大型不明物體接近</div>
+            <div class="boss-hp-bar"><div id="boss-hp-fill"></div></div>
         </div>
     </div>
 
     <div id="birthday-msg">Happy Birthday Sam! 🎂</div>
 
     <div id="level-up-modal" class="modal">
-        <h2 style="margin: 0 0 10px 0; text-align: center; font-size: 20px;">科技升級</h2>
-        <div class="skill-option" onclick="chooseSkill('multishot')">
-            <span class="skill-name">多重彈道 (+1)</span>
-            <span class="skill-desc">增加每次射擊的子彈數量。</span>
+        <h2 style="text-align: center; margin-top:0;">武器升級</h2>
+        <div class="skill-option" onclick="chooseSkill('bullets')">
+            <span class="skill-name">增加彈道</span>
+            <span class="skill-desc">每次射擊發射更多子彈</span>
         </div>
         <div class="skill-option" onclick="chooseSkill('firerate')">
-            <span class="skill-name">射速強化 (-15%)</span>
-            <span class="skill-desc">提升武器射擊頻率。</span>
+            <span class="skill-name">射速提升</span>
+            <span class="skill-desc">縮短武器冷卻時間</span>
         </div>
         <div class="skill-option" onclick="chooseSkill('damage')">
-            <span class="skill-name">彈藥強化 (+50%)</span>
-            <span class="skill-desc">提升單發子彈的傷害力。</span>
+            <span class="skill-name">傷害強化</span>
+            <span class="skill-desc">大幅提升子彈破壞力</span>
         </div>
     </div>
 
     <div id="overlay">
-        <h1>星際守護者</h1>
+        <h1 style="color:var(--primary-color); margin-bottom:10px;">星際守護者</h1>
+        <p style="color:white; opacity:0.6; margin-bottom:30px; font-size:14px;">拖動戰機 | 收集寶石升級 | 擊敗魔王</p>
         <button class="start-btn" onclick="startGame()">開始戰鬥</button>
     </div>
 </div>
@@ -251,140 +225,65 @@
     let bossActive = false;
     let birthdayMode = false;
 
-    const skills = {
-        bullets: 1,
-        fireInterval: 14,
-        damage: 1
-    };
+    const skills = { bullets: 1, fireInterval: 16, damage: 1 };
+    const player = { x: 0, y: 0, radius: 15, lastTouchX: 0, lastTouchY: 0, isTouching: false };
 
-    const player = {
-        x: 0,
-        y: 0,
-        radius: 18,
-        lastTouchX: 0,
-        lastTouchY: 0,
-        isTouching: false
-    };
-
-    let stars = [];
-    let projectiles = [];
-    let enemyProjectiles = [];
-    let enemies = [];
-    let particles = [];
-    let gems = [];
-    let boss = null;
+    let stars = [], projectiles = [], enemyProjectiles = [], enemies = [], particles = [], gems = [], boss = null;
 
     function init() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        
         player.x = canvas.width / 2;
-        player.y = canvas.height * 0.75;
-
-        stars = [];
-        for(let i=0; i<80; i++) {
-            stars.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 2,
-                speed: Math.random() * 2 + 0.5
-            });
-        }
+        player.y = canvas.height * 0.8;
+        stars = Array.from({length: 50}, () => ({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2,
+            speed: Math.random() * 1.5 + 0.5
+        }));
     }
 
-    const handleStart = (clientX, clientY) => {
-        if (!gameActive || isPaused) return;
-        player.isTouching = true;
-        player.lastTouchX = clientX;
-        player.lastTouchY = clientY;
+    // 觸控優化
+    const handleStart = (x, y) => { if(!gameActive || isPaused) return; player.isTouching = true; player.lastTouchX = x; player.lastTouchY = y; };
+    const handleMove = (x, y) => {
+        if(!player.isTouching || isPaused) return;
+        const dx = x - player.lastTouchX;
+        const dy = y - player.lastTouchY;
+        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x + dx));
+        player.y = Math.max(100, Math.min(canvas.height - player.radius, player.y + dy));
+        player.lastTouchX = x; player.lastTouchY = y;
     };
+    window.addEventListener('touchstart', e => handleStart(e.touches[0].clientX, e.touches[0].clientY));
+    window.addEventListener('touchmove', e => { e.preventDefault(); handleMove(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
+    window.addEventListener('touchend', () => player.isTouching = false);
+    window.addEventListener('mousedown', e => handleStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', () => player.isTouching = false);
 
-    const handleMove = (clientX, clientY) => {
-        if (!gameActive || isPaused || !player.isTouching) return;
-        
-        const dx = clientX - player.lastTouchX;
-        const dy = clientY - player.lastTouchY;
-        
-        player.x += dx;
-        player.y += dy;
-        
-        player.lastTouchX = clientX;
-        player.lastTouchY = clientY;
-        
-        if (player.x < player.radius) player.x = player.radius;
-        if (player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
-        if (player.y < player.radius + 100) player.y = player.radius + 100; 
-        if (player.y > canvas.height - player.radius) player.y = canvas.height - player.radius;
-    };
-
-    const handleEnd = () => {
-        player.isTouching = false;
-    };
-
-    window.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY));
-    window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
-    window.addEventListener('mouseup', handleEnd);
-
-    window.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        handleStart(touch.clientX, touch.clientY);
-    });
-    window.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        handleMove(touch.clientX, touch.clientY);
-    }, { passive: false });
-    window.addEventListener('touchend', handleEnd);
-
-    function createExplosion(x, y, color, count = 12) {
+    function createExplosion(x, y, color, count = 8) {
         for(let i=0; i<count; i++) {
             particles.push({
-                x, y,
-                vx: (Math.random() - 0.5) * 8,
-                vy: (Math.random() - 0.5) * 8,
-                radius: Math.random() * 2.5,
-                color,
-                alpha: 1
+                x, y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6,
+                radius: Math.random()*2, color, alpha: 1
             });
         }
     }
 
     function chooseSkill(type) {
-        if (type === 'multishot') skills.bullets++;
-        if (type === 'firerate') skills.fireInterval *= 0.85;
-        if (type === 'damage') skills.damage += 0.5;
-        
+        if(type === 'bullets') skills.bullets++;
+        if(type === 'firerate') skills.fireInterval = Math.max(5, skills.fireInterval * 0.8);
+        if(type === 'damage') skills.damage += 0.5;
         lvModal.style.display = 'none';
         isPaused = false;
     }
 
     function startGame() {
         overlay.style.display = 'none';
-        gameActive = true;
-        score = 0;
-        health = 100;
-        playerLv = 1;
-        currentExp = 0;
-        nextExp = 100;
-        bossLevel = 0;
-        frames = 0;
-        bossActive = false;
-        birthdayMode = false;
-        skills.bullets = 1;
-        skills.fireInterval = 14;
-        skills.damage = 1;
-        projectiles = [];
-        enemyProjectiles = [];
-        enemies = [];
-        gems = [];
-        particles = [];
-        boss = null;
-        bossUi.style.display = 'none';
-        birthdayMsg.style.display = 'none';
-        
-        player.x = canvas.width / 2;
-        player.y = canvas.height * 0.75;
-        
+        gameActive = true; isPaused = false;
+        score = 0; health = 100; playerLv = 1; currentExp = 0; nextExp = 100;
+        bossLevel = 0; bossActive = false; boss = null;
+        enemies = []; projectiles = []; enemyProjectiles = []; gems = []; particles = [];
+        skills.bullets = 1; skills.fireInterval = 16; skills.damage = 1;
         updateUI();
         animate();
     }
@@ -396,183 +295,145 @@
         expFill.style.width = (currentExp / nextExp * 100) + '%';
     }
 
-    function update() {
-        if (!gameActive || isPaused) return;
+    function gameOver() {
+        gameActive = false;
+        overlay.style.display = 'flex';
+        overlay.querySelector('h1').innerText = '戰機被毀';
+        overlay.querySelector('p').innerText = `最終得分: ${Math.floor(score)}`;
+        bossUi.style.display = 'none';
+    }
 
+    function update() {
+        if(!gameActive || isPaused) return;
         frames++;
 
-        // 生日模式門檻調高至 50000 分
-        if (score >= 50000 && !birthdayMode) {
-            birthdayMode = true;
-            birthdayMsg.style.display = 'block';
-            enemies = [];
-            boss = null;
-            bossActive = false;
-            bossUi.style.display = 'none';
-        }
+        // 星空移動
+        stars.forEach(s => { s.y += s.speed; if(s.y > canvas.height) s.y = 0; });
 
-        stars.forEach(s => {
-            s.y += s.speed;
-            if (s.y > canvas.height) s.y = 0;
-        });
-
-        if (frames % Math.floor(skills.fireInterval) === 0) {
-            const spread = 0.25;
+        // 玩家射擊
+        if(frames % Math.floor(skills.fireInterval) === 0) {
+            const spread = 0.3;
             const startAngle = -((skills.bullets - 1) * spread) / 2;
             for(let i=0; i<skills.bullets; i++) {
                 projectiles.push({
-                    x: player.x,
-                    y: player.y - 20,
+                    x: player.x, y: player.y - 15,
                     vx: Math.sin(startAngle + i * spread) * 10,
-                    vy: -12,
-                    damage: skills.damage
+                    vy: -12, damage: skills.damage
                 });
             }
         }
 
+        // 子彈邏輯
         projectiles.forEach((p, i) => {
-            p.x += p.vx;
-            p.y += p.vy;
-            if (p.y < -20 || p.x < -20 || p.x > canvas.width + 20) projectiles.splice(i, 1);
+            p.x += p.vx; p.y += p.vy;
+            if(p.y < -20) projectiles.splice(i, 1);
         });
 
-        if (!bossActive && !birthdayMode && frames % 40 === 0) {
-            const size = Math.random() * 25 + 20;
+        // 敵人生成
+        if(!bossActive && frames % 45 === 0) {
+            const size = 30;
             enemies.push({
-                x: Math.random() * (canvas.width - size),
-                y: -size,
-                w: size,
-                h: size,
-                hp: 1 + Math.floor(score / 5000),
-                speed: 2.5 + Math.random() * 2,
-                color: `hsl(${Math.random() * 40 + 180}, 70%, 50%)`
+                x: Math.random() * (canvas.width - size), y: -size,
+                w: size, h: size, hp: 1 + Math.floor(score / 5000),
+                speed: 2 + Math.random() * 2, color: '#a040ff'
             });
         }
 
-        if (!bossActive && !birthdayMode && score > (bossLevel + 1) * 8000) {
-            bossActive = true;
-            bossLevel++;
-            bossUi.style.display = 'block';
-            const hp = 100 + bossLevel * 150;
-            boss = {
-                x: canvas.width / 2 - 40,
-                y: -120,
-                w: 80,
-                h: 60,
-                hp,
-                maxHp: hp,
-                targetY: 120,
-                speed: 2 + (bossLevel * 0.2),
-                dir: 1,
-                fireTimer: 0
-            };
-        }
-
+        // 敵人邏輯
         enemies.forEach((e, i) => {
             e.y += e.speed;
-            if (e.y > canvas.height) enemies.splice(i, 1);
-
+            if(e.y > canvas.height) enemies.splice(i, 1);
+            
             projectiles.forEach((p, pi) => {
-                if (p.x > e.x && p.x < e.x + e.w && p.y > e.y && p.y < e.y + e.h) {
+                if(p.x > e.x && p.x < e.x + e.w && p.y > e.y && p.y < e.y + e.h) {
                     e.hp -= p.damage;
                     projectiles.splice(pi, 1);
-                    if (e.hp <= 0) {
+                    if(e.hp <= 0) {
                         createExplosion(e.x + e.w/2, e.y + e.h/2, e.color);
                         gems.push({ x: e.x + e.w/2, y: e.y + e.h/2 });
-                        score += 250; // 分數增加
+                        score += 150;
                         enemies.splice(i, 1);
                     }
                 }
             });
 
-            if (Math.hypot(e.x + e.w/2 - player.x, e.y + e.h/2 - player.y) < player.radius + e.w/2) {
-                health -= 15;
+            if(Math.hypot(e.x+e.w/2 - player.x, e.y+e.h/2 - player.y) < player.radius + 15) {
+                health -= 20;
                 enemies.splice(i, 1);
-                createExplosion(player.x, player.y, '#ff0000');
-                if (health <= 0) gameOver();
+                createExplosion(player.x, player.y, 'red');
+                if(health <= 0) gameOver();
             }
         });
 
+        // 寶石與升級
         gems.forEach((g, i) => {
-            const dist = Math.hypot(g.x - player.x, g.y - player.y);
-            if (dist < 150) {
-                g.x += (player.x - g.x) * 0.15;
-                g.y += (player.y - g.y) * 0.15;
-            } else {
-                g.y += 3;
-            }
+            const d = Math.hypot(g.x - player.x, g.y - player.y);
+            if(d < 120) { g.x += (player.x - g.x)*0.1; g.y += (player.y - g.y)*0.1; }
+            else g.y += 2.5;
 
-            if (dist < 30) {
-                currentExp += 25;
-                score += 50; // 撿寶石也加分
-                if (currentExp >= nextExp) {
-                    currentExp = 0;
-                    nextExp *= 1.4;
-                    playerLv++;
-                    isPaused = true;
-                    lvModal.style.display = 'flex';
+            if(d < 25) {
+                currentExp += 35; score += 20;
+                if(currentExp >= nextExp) {
+                    currentExp = 0; nextExp *= 1.3; playerLv++;
+                    isPaused = true; lvModal.style.display = 'flex';
                 }
                 gems.splice(i, 1);
-            }
-            if (g.y > canvas.height) gems.splice(i, 1);
+            } else if(g.y > canvas.height) gems.splice(i, 1);
         });
 
-        if (boss) {
-            if (boss.y < boss.targetY) boss.y += 2;
+        // Boss 邏輯
+        if(!bossActive && score > (bossLevel + 1) * 8000) {
+            bossActive = true; bossLevel++;
+            bossUi.style.display = 'block';
+            const hp = 100 + bossLevel * 200;
+            boss = { x: canvas.width/2 - 50, y: -100, w: 100, h: 70, hp, maxHp: hp, dir: 1, timer: 0 };
+        }
+
+        if(boss) {
+            if(boss.y < 80) boss.y += 1.5;
             else {
-                boss.x += boss.speed * boss.dir;
-                if (boss.x < 20 || boss.x > canvas.width - boss.w - 20) boss.dir *= -1;
-                
-                boss.fireTimer++;
-                if (boss.fireTimer > Math.max(30, 60 - bossLevel * 5)) {
-                    boss.fireTimer = 0;
-                    for(let i=-1; i<=1; i++) {
-                        enemyProjectiles.push({
-                            x: boss.x + boss.w/2,
-                            y: boss.y + boss.h,
-                            vx: i * 2.5,
-                            vy: 5
-                        });
+                boss.x += 2 * boss.dir;
+                if(boss.x < 10 || boss.x > canvas.width - boss.w - 10) boss.dir *= -1;
+                boss.timer++;
+                if(boss.timer > 50) {
+                    boss.timer = 0;
+                    for(let j=-1; j<=1; j++) {
+                        enemyProjectiles.push({ x: boss.x + boss.w/2, y: boss.y + boss.h, vx: j*2, vy: 5 });
                     }
                 }
             }
 
             projectiles.forEach((p, pi) => {
-                if (p.x > boss.x && p.x < boss.x + boss.w && p.y > boss.y && p.y < boss.y + boss.h) {
+                if(p.x > boss.x && p.x < boss.x + boss.w && p.y > boss.y && p.y < boss.y + boss.h) {
                     boss.hp -= p.damage;
                     projectiles.splice(pi, 1);
-                    if (boss.hp <= 0) {
-                        createExplosion(boss.x + boss.w/2, boss.y + boss.h/2, '#ff3e3e', 40);
-                        score += 5000; // Boss 分數大幅提升
+                    if(boss.hp <= 0) {
+                        createExplosion(boss.x + boss.w/2, boss.y + boss.h/2, 'red', 30);
+                        score += 10000; // 擊敗 Boss 獲得大量分數
                         boss = null;
-                        bossActive = false; // 關鍵修復：重置狀態
-                        bossUi.style.display = 'none';
+                        setTimeout(() => { 
+                            bossActive = false; 
+                            bossUi.style.display = 'none';
+                            enemyProjectiles = []; // 清空子彈防卡住
+                        }, 100);
                     }
                 }
             });
-
-            if (boss) {
-                bossHpFill.style.width = (boss.hp / boss.maxHp * 100) + '%';
-            }
+            if(boss) bossHpFill.style.width = (boss.hp / boss.maxHp * 100) + '%';
         }
 
         enemyProjectiles.forEach((p, i) => {
-            p.x += p.vx;
-            p.y += p.vy;
-            if (Math.hypot(p.x - player.x, p.y - player.y) < player.radius + 5) {
-                health -= 10;
-                enemyProjectiles.splice(i, 1);
-                createExplosion(player.x, player.y, '#ff0000');
-                if (health <= 0) gameOver();
-            }
-            if (p.y > canvas.height) enemyProjectiles.splice(i, 1);
+            p.x += p.vx; p.y += p.vy;
+            if(Math.hypot(p.x - player.x, p.y - player.y) < player.radius + 5) {
+                health -= 15; enemyProjectiles.splice(i, 1);
+                createExplosion(player.x, player.y, 'red');
+                if(health <= 0) gameOver();
+            } else if(p.y > canvas.height) enemyProjectiles.splice(i, 1);
         });
 
         particles.forEach((p, i) => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.alpha -= 0.03;
-            if (p.alpha <= 0) particles.splice(i, 1);
+            p.x += p.vx; p.y += p.vy; p.alpha -= 0.02;
+            if(p.alpha <= 0) particles.splice(i, 1);
         });
 
         updateUI();
@@ -580,82 +441,59 @@
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 繪製背景星空
+        ctx.fillStyle = "white";
+        stars.forEach(s => ctx.fillRect(s.x, s.y, s.size, s.size));
 
-        stars.forEach(s => {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.fillRect(s.x, s.y, s.size, s.size);
-        });
-
+        // 繪製玩家 (發光效果)
         ctx.save();
         ctx.translate(player.x, player.y);
-        ctx.fillStyle = '#00f2ff';
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#00f2ff';
+        ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
+        ctx.fillStyle = "#00f2ff";
         ctx.beginPath();
-        ctx.moveTo(0, -22);
-        ctx.lineTo(18, 12);
-        ctx.lineTo(0, 4);
-        ctx.lineTo(-18, 12);
-        ctx.closePath();
+        ctx.moveTo(0, -18); ctx.lineTo(15, 12); ctx.lineTo(0, 5); ctx.lineTo(-15, 12); ctx.closePath();
         ctx.fill();
         ctx.restore();
 
-        projectiles.forEach(p => {
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-            ctx.fill();
-        });
+        // 子彈
+        ctx.fillStyle = "white";
+        projectiles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill(); });
 
+        // 敵人
         enemies.forEach(e => {
             ctx.fillStyle = e.color;
             ctx.fillRect(e.x, e.y, e.w, e.h);
         });
 
+        // 寶石
         gems.forEach(g => {
-            ctx.fillStyle = '#f1c40f';
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#f1c40f';
-            ctx.beginPath();
-            ctx.arc(g.x, g.y, 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
+            ctx.fillStyle = "#f1c40f";
+            ctx.beginPath(); ctx.arc(g.x, g.y, 5, 0, Math.PI*2); ctx.fill();
         });
 
-        if (boss) {
-            ctx.fillStyle = '#ff3e3e';
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#ff3e3e';
+        // Boss
+        if(boss) {
+            ctx.fillStyle = "#ff3e3e";
+            ctx.shadowBlur = 20; ctx.shadowColor = "red";
             ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
             ctx.shadowBlur = 0;
         }
 
-        enemyProjectiles.forEach(p => {
-            ctx.fillStyle = '#ff3e3e';
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-            ctx.fill();
-        });
+        // 敵人子彈
+        ctx.fillStyle = "red";
+        enemyProjectiles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, Math.PI*2); ctx.fill(); });
 
+        // 粒子
         particles.forEach(p => {
-            ctx.globalAlpha = p.alpha;
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2); ctx.fill();
         });
         ctx.globalAlpha = 1;
     }
 
-    function gameOver() {
-        gameActive = false;
-        overlay.style.display = 'flex';
-        overlay.querySelector('h1').innerText = '任務失敗';
-        bossUi.style.display = 'none';
-    }
-
     function animate() {
-        if (!gameActive) return;
+        if(!gameActive) return;
         update();
         draw();
         requestAnimationFrame(animate);
