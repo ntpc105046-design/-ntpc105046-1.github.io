@@ -261,8 +261,10 @@
         x: 0,
         y: 0,
         radius: 18,
-        targetX: 0,
-        targetY: 0
+        // 用於相對移動的變量
+        lastTouchX: 0,
+        lastTouchY: 0,
+        isTouching: false
     };
 
     let stars = [];
@@ -277,10 +279,9 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         
+        // 初始位置設定在螢幕下方 75% 處
         player.x = canvas.width / 2;
-        player.y = canvas.height * 0.85;
-        player.targetX = player.x;
-        player.targetY = player.y;
+        player.y = canvas.height * 0.75;
 
         stars = [];
         for(let i=0; i<80; i++) {
@@ -293,20 +294,59 @@
         }
     }
 
-    // 處理滑鼠滑動
-    window.addEventListener('mousemove', (e) => {
-        if (!gameActive || isPaused) return;
-        player.targetX = e.clientX;
-        player.targetY = e.clientY;
-    });
+    // --- 改良後的操作邏輯 (支援滑鼠與觸控的相對移動) ---
 
-    // 處理手機觸控
-    window.addEventListener('touchmove', (e) => {
+    const handleStart = (clientX, clientY) => {
         if (!gameActive || isPaused) return;
+        player.isTouching = true;
+        player.lastTouchX = clientX;
+        player.lastTouchY = clientY;
+    };
+
+    const handleMove = (clientX, clientY) => {
+        if (!gameActive || isPaused || !player.isTouching) return;
+        
+        // 計算位移量
+        const dx = clientX - player.lastTouchX;
+        const dy = clientY - player.lastTouchY;
+        
+        // 套用位移到角色座標
+        player.x += dx;
+        player.y += dy;
+        
+        // 更新最後觸控點
+        player.lastTouchX = clientX;
+        player.lastTouchY = clientY;
+        
+        // 邊界限制：防止飛出螢幕
+        if (player.x < player.radius) player.x = player.radius;
+        if (player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
+        if (player.y < player.radius + 100) player.y = player.radius + 100; // 留出 UI 空間
+        if (player.y > canvas.height - player.radius) player.y = canvas.height - player.radius;
+    };
+
+    const handleEnd = () => {
+        player.isTouching = false;
+    };
+
+    // 滑鼠事件
+    window.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', handleEnd);
+
+    // 觸控事件
+    window.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        handleStart(touch.clientX, touch.clientY);
+    });
+    window.addEventListener('touchmove', (e) => {
         e.preventDefault();
-        player.targetX = e.touches[0].clientX;
-        player.targetY = e.touches[0].clientY;
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
     }, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+
+    // ------------------------------------------
 
     function createExplosion(x, y, color, count = 12) {
         for(let i=0; i<count; i++) {
@@ -352,6 +392,11 @@
         particles = [];
         boss = null;
         birthdayMsg.style.display = 'none';
+        
+        // 重新設定玩家位置
+        player.x = canvas.width / 2;
+        player.y = canvas.height * 0.75;
+        
         updateUI();
         animate();
     }
@@ -380,10 +425,6 @@
             s.y += s.speed;
             if (s.y > canvas.height) s.y = 0;
         });
-
-        // 玩家跟隨觸控點
-        player.x += (player.targetX - player.x) * 0.12;
-        player.y += (player.targetY - player.y) * 0.12;
 
         // 自動射擊
         if (frames % Math.floor(skills.fireInterval) === 0) {
@@ -433,7 +474,7 @@
                 h: 50,
                 hp,
                 maxHp: hp,
-                targetY: 100,
+                targetY: 120,
                 speed: 2,
                 dir: 1,
                 fireTimer: 0
@@ -555,11 +596,11 @@
             ctx.fillRect(s.x, s.y, s.size, s.size);
         });
 
-        // 畫玩家 (針對小螢幕稍微縮小)
+        // 畫玩家
         ctx.save();
         ctx.translate(player.x, player.y);
         ctx.fillStyle = '#00f2ff';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 15;
         ctx.shadowColor = '#00f2ff';
         ctx.beginPath();
         ctx.moveTo(0, -22);
@@ -636,7 +677,6 @@
         requestAnimationFrame(animate);
     }
 
-    // 當視窗大小改變時重新初始化
     window.addEventListener('resize', init);
 
     init();
