@@ -261,7 +261,6 @@
         x: 0,
         y: 0,
         radius: 18,
-        // 用於相對移動的變量
         lastTouchX: 0,
         lastTouchY: 0,
         isTouching: false
@@ -279,7 +278,6 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         
-        // 初始位置設定在螢幕下方 75% 處
         player.x = canvas.width / 2;
         player.y = canvas.height * 0.75;
 
@@ -294,8 +292,6 @@
         }
     }
 
-    // --- 改良後的操作邏輯 (支援滑鼠與觸控的相對移動) ---
-
     const handleStart = (clientX, clientY) => {
         if (!gameActive || isPaused) return;
         player.isTouching = true;
@@ -306,22 +302,18 @@
     const handleMove = (clientX, clientY) => {
         if (!gameActive || isPaused || !player.isTouching) return;
         
-        // 計算位移量
         const dx = clientX - player.lastTouchX;
         const dy = clientY - player.lastTouchY;
         
-        // 套用位移到角色座標
         player.x += dx;
         player.y += dy;
         
-        // 更新最後觸控點
         player.lastTouchX = clientX;
         player.lastTouchY = clientY;
         
-        // 邊界限制：防止飛出螢幕
         if (player.x < player.radius) player.x = player.radius;
         if (player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
-        if (player.y < player.radius + 100) player.y = player.radius + 100; // 留出 UI 空間
+        if (player.y < player.radius + 100) player.y = player.radius + 100; 
         if (player.y > canvas.height - player.radius) player.y = canvas.height - player.radius;
     };
 
@@ -329,12 +321,10 @@
         player.isTouching = false;
     };
 
-    // 滑鼠事件
     window.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY));
     window.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
     window.addEventListener('mouseup', handleEnd);
 
-    // 觸控事件
     window.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         handleStart(touch.clientX, touch.clientY);
@@ -345,8 +335,6 @@
         handleMove(touch.clientX, touch.clientY);
     }, { passive: false });
     window.addEventListener('touchend', handleEnd);
-
-    // ------------------------------------------
 
     function createExplosion(x, y, color, count = 12) {
         for(let i=0; i<count; i++) {
@@ -391,9 +379,9 @@
         gems = [];
         particles = [];
         boss = null;
+        bossUi.style.display = 'none';
         birthdayMsg.style.display = 'none';
         
-        // 重新設定玩家位置
         player.x = canvas.width / 2;
         player.y = canvas.height * 0.75;
         
@@ -413,11 +401,13 @@
 
         frames++;
 
-        if (score >= 10000 && !birthdayMode) {
+        // 生日模式門檻調高至 50000 分
+        if (score >= 50000 && !birthdayMode) {
             birthdayMode = true;
             birthdayMsg.style.display = 'block';
             enemies = [];
             boss = null;
+            bossActive = false;
             bossUi.style.display = 'none';
         }
 
@@ -426,7 +416,6 @@
             if (s.y > canvas.height) s.y = 0;
         });
 
-        // 自動射擊
         if (frames % Math.floor(skills.fireInterval) === 0) {
             const spread = 0.25;
             const startAngle = -((skills.bullets - 1) * spread) / 2;
@@ -447,35 +436,33 @@
             if (p.y < -20 || p.x < -20 || p.x > canvas.width + 20) projectiles.splice(i, 1);
         });
 
-        // 生成敵人
-        if (!bossActive && !birthdayMode && frames % 45 === 0) {
+        if (!bossActive && !birthdayMode && frames % 40 === 0) {
             const size = Math.random() * 25 + 20;
             enemies.push({
                 x: Math.random() * (canvas.width - size),
                 y: -size,
                 w: size,
                 h: size,
-                hp: 1 + Math.floor(score / 2500),
+                hp: 1 + Math.floor(score / 5000),
                 speed: 2.5 + Math.random() * 2,
                 color: `hsl(${Math.random() * 40 + 180}, 70%, 50%)`
             });
         }
 
-        // BOSS 出現邏輯
-        if (!bossActive && !birthdayMode && score > (bossLevel + 1) * 3000) {
+        if (!bossActive && !birthdayMode && score > (bossLevel + 1) * 8000) {
             bossActive = true;
             bossLevel++;
             bossUi.style.display = 'block';
-            const hp = 80 + bossLevel * 100;
+            const hp = 100 + bossLevel * 150;
             boss = {
                 x: canvas.width / 2 - 40,
-                y: -100,
+                y: -120,
                 w: 80,
-                h: 50,
+                h: 60,
                 hp,
                 maxHp: hp,
                 targetY: 120,
-                speed: 2,
+                speed: 2 + (bossLevel * 0.2),
                 dir: 1,
                 fireTimer: 0
             };
@@ -492,7 +479,7 @@
                     if (e.hp <= 0) {
                         createExplosion(e.x + e.w/2, e.y + e.h/2, e.color);
                         gems.push({ x: e.x + e.w/2, y: e.y + e.h/2 });
-                        score += 100;
+                        score += 250; // 分數增加
                         enemies.splice(i, 1);
                     }
                 }
@@ -508,18 +495,19 @@
 
         gems.forEach((g, i) => {
             const dist = Math.hypot(g.x - player.x, g.y - player.y);
-            if (dist < 120) {
-                g.x += (player.x - g.x) * 0.12;
-                g.y += (player.y - g.y) * 0.12;
+            if (dist < 150) {
+                g.x += (player.x - g.x) * 0.15;
+                g.y += (player.y - g.y) * 0.15;
             } else {
-                g.y += 2.5;
+                g.y += 3;
             }
 
-            if (dist < 25) {
+            if (dist < 30) {
                 currentExp += 25;
+                score += 50; // 撿寶石也加分
                 if (currentExp >= nextExp) {
                     currentExp = 0;
-                    nextExp *= 1.35;
+                    nextExp *= 1.4;
                     playerLv++;
                     isPaused = true;
                     lvModal.style.display = 'flex';
@@ -530,20 +518,20 @@
         });
 
         if (boss) {
-            if (boss.y < boss.targetY) boss.y += 1.5;
+            if (boss.y < boss.targetY) boss.y += 2;
             else {
                 boss.x += boss.speed * boss.dir;
                 if (boss.x < 20 || boss.x > canvas.width - boss.w - 20) boss.dir *= -1;
                 
                 boss.fireTimer++;
-                if (boss.fireTimer > 60) {
+                if (boss.fireTimer > Math.max(30, 60 - bossLevel * 5)) {
                     boss.fireTimer = 0;
                     for(let i=-1; i<=1; i++) {
                         enemyProjectiles.push({
                             x: boss.x + boss.w/2,
                             y: boss.y + boss.h,
-                            vx: i * 2,
-                            vy: 4
+                            vx: i * 2.5,
+                            vy: 5
                         });
                     }
                 }
@@ -554,22 +542,24 @@
                     boss.hp -= p.damage;
                     projectiles.splice(pi, 1);
                     if (boss.hp <= 0) {
-                        createExplosion(boss.x + boss.w/2, boss.y + boss.h/2, '#ff3e3e', 30);
-                        score += 1500;
+                        createExplosion(boss.x + boss.w/2, boss.y + boss.h/2, '#ff3e3e', 40);
+                        score += 5000; // Boss 分數大幅提升
                         boss = null;
-                        bossActive = false;
+                        bossActive = false; // 關鍵修復：重置狀態
                         bossUi.style.display = 'none';
                     }
                 }
             });
 
-            bossHpFill.style.width = (boss.hp / boss.maxHp * 100) + '%';
+            if (boss) {
+                bossHpFill.style.width = (boss.hp / boss.maxHp * 100) + '%';
+            }
         }
 
         enemyProjectiles.forEach((p, i) => {
             p.x += p.vx;
             p.y += p.vy;
-            if (Math.hypot(p.x - player.x, p.y - player.y) < player.radius + 4) {
+            if (Math.hypot(p.x - player.x, p.y - player.y) < player.radius + 5) {
                 health -= 10;
                 enemyProjectiles.splice(i, 1);
                 createExplosion(player.x, player.y, '#ff0000');
@@ -581,7 +571,7 @@
         particles.forEach((p, i) => {
             p.x += p.vx;
             p.y += p.vy;
-            p.alpha -= 0.025;
+            p.alpha -= 0.03;
             if (p.alpha <= 0) particles.splice(i, 1);
         });
 
@@ -596,7 +586,6 @@
             ctx.fillRect(s.x, s.y, s.size, s.size);
         });
 
-        // 畫玩家
         ctx.save();
         ctx.translate(player.x, player.y);
         ctx.fillStyle = '#00f2ff';
@@ -611,49 +600,43 @@
         ctx.fill();
         ctx.restore();
 
-        // 畫玩家子彈
         projectiles.forEach(p => {
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
             ctx.fill();
         });
 
-        // 畫敵人
         enemies.forEach(e => {
             ctx.fillStyle = e.color;
             ctx.fillRect(e.x, e.y, e.w, e.h);
         });
 
-        // 畫寶石 (經驗值)
         gems.forEach(g => {
             ctx.fillStyle = '#f1c40f';
-            ctx.shadowBlur = 8;
+            ctx.shadowBlur = 10;
             ctx.shadowColor = '#f1c40f';
             ctx.beginPath();
-            ctx.arc(g.x, g.y, 4, 0, Math.PI * 2);
+            ctx.arc(g.x, g.y, 5, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
         });
 
-        // 畫 BOSS
         if (boss) {
             ctx.fillStyle = '#ff3e3e';
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 20;
             ctx.shadowColor = '#ff3e3e';
             ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
             ctx.shadowBlur = 0;
         }
 
-        // 畫敵人子彈
         enemyProjectiles.forEach(p => {
             ctx.fillStyle = '#ff3e3e';
             ctx.beginPath();
-            ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
             ctx.fill();
         });
 
-        // 畫粒子
         particles.forEach(p => {
             ctx.globalAlpha = p.alpha;
             ctx.fillStyle = p.color;
@@ -668,6 +651,7 @@
         gameActive = false;
         overlay.style.display = 'flex';
         overlay.querySelector('h1').innerText = '任務失敗';
+        bossUi.style.display = 'none';
     }
 
     function animate() {
@@ -678,7 +662,6 @@
     }
 
     window.addEventListener('resize', init);
-
     init();
 </script>
 </body>
