@@ -1,400 +1,189 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>極限跳躍 - Sam 生日快樂</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加油跑馬燈 - 張登淋加油</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @keyframes marquee {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .marquee-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee var(--duration, 8s) linear infinite;
+            will-change: transform;
+        }
+
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8),
+                         0 0 20px currentColor,
+                         0 0 30px currentColor;
+        }
+
+        /* 隱藏控制介面的動畫 */
+        .controls-panel {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+        }
+
+        .controls-hidden .controls-panel {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
         body {
-            margin: 0;
+            background-color: #000;
             overflow: hidden;
-            background: #020617;
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-            touch-action: none;
-            user-select: none;
-        }
-        canvas {
-            display: block;
-        }
-        .controls-container {
-            position: absolute;
-            bottom: 40px;
-            left: 0;
-            right: 0;
-            height: 160px;
-            z-index: 100;
-            pointer-events: none;
-        }
-        .joy-container {
-            position: absolute;
-            left: 40px;
-            bottom: 20px;
-            width: 120px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            pointer-events: auto;
-            backdrop-filter: blur(8px);
-        }
-        .joy-handle {
-            width: 50px;
-            height: 50px;
-            background: #fff;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-            pointer-events: none;
-        }
-        .jump-container {
-            position: absolute;
-            right: 40px;
-            bottom: 20px;
-            width: 110px;
-            height: 110px;
-            background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
-            border: 4px solid #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 900;
-            font-size: 1.4rem;
-            pointer-events: auto;
-            box-shadow: 0 8px 0 #831843;
-            transition: transform 0.05s;
-        }
-        .jump-container:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #831843;
-        }
-        #overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(2, 6, 23, 0.85);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            z-index: 200;
-            padding: 20px;
-            text-align: center;
-        }
-        .birthday-text {
-            background: linear-gradient(to right, #fbbf24, #f472b6, #60a5fa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 900;
-            font-size: 3.5rem;
-            text-shadow: 0 0 30px rgba(244, 114, 182, 0.4);
-            animation: pulse 1.5s infinite;
-            margin-bottom: 2rem;
-        }
-        #reset-btn {
-            background: linear-gradient(to right, #f472b6, #e11d48);
-            padding: 1rem 3.5rem;
-            border-radius: 9999px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.4);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            transition: all 0.1s;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            touch-action: manipulation;
+            font-family: sans-serif;
         }
     </style>
 </head>
-<body>
+<body class="h-screen flex flex-col items-center justify-center text-white">
 
-    <div class="controls-container">
-        <div id="joy-base" class="joy-container">
-            <div id="joy-handle" class="joy-handle"></div>
+    <!-- 跑馬燈顯示區域 -->
+    <div id="displayArea" class="flex-grow w-full flex items-center overflow-hidden cursor-pointer" title="點擊任何處顯示設定">
+        <div id="marqueeWrapper" class="w-full">
+            <span id="marqueeText" class="marquee-content font-black glow-text leading-none">
+                張登淋加油
+            </span>
         </div>
-        <div id="jump-btn" class="jump-container">JUMP</div>
     </div>
 
-    <div id="overlay">
-        <!-- 只有勝利時會顯示此區塊 -->
-        <div id="win-content" class="hidden">
-            <h1 class="birthday-text">祝 Sam 生日快樂！</h1>
-        </div>
-        <button id="reset-btn">再應戰一次</button>
-    </div>
+    <!-- 控制面板 -->
+    <div id="controls" class="controls-panel fixed bottom-0 left-0 right-0 p-6 bg-gray-900/95 backdrop-blur-xl border-t border-gray-700 z-50">
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- 文字輸入與顏色 -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-400">加油文字</label>
+                    <input type="text" id="textInput" value="張登淋加油" 
+                           class="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-xl focus:ring-2 focus:ring-yellow-500 outline-none transition-all">
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium mb-1 text-gray-400">文字顏色</label>
+                        <input type="color" id="colorInput" value="#ffff00" class="w-full h-12 bg-gray-800 border border-gray-600 rounded-lg p-1 cursor-pointer">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium mb-1 text-gray-400">背景顏色</label>
+                        <input type="color" id="bgColorInput" value="#000000" class="w-full h-12 bg-gray-800 border border-gray-600 rounded-lg p-1 cursor-pointer">
+                    </div>
+                </div>
+            </div>
 
-    <canvas id="gameCanvas"></canvas>
+            <!-- 速度與大小 -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1 flex justify-between text-gray-400">
+                        字體大小 <span id="sizeValue" class="text-white">55vh</span>
+                    </label>
+                    <input type="range" id="sizeInput" min="10" max="95" value="55" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1 flex justify-between text-gray-400">
+                        滾動速度 <span id="speedValue" class="text-white">快</span>
+                    </label>
+                    <input type="range" id="speedInput" min="1" max="25" value="18" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能按鈕 -->
+        <div class="mt-8 flex flex-col items-center gap-3">
+            <button id="toggleBtn" class="bg-yellow-500 hover:bg-yellow-400 text-black px-10 py-3 rounded-full font-bold text-lg transition-transform active:scale-95 shadow-lg shadow-yellow-500/20">
+                進入應援模式 (隱藏介面)
+            </button>
+            <p class="text-gray-500 text-sm italic">點擊畫面上方任何區域可喚回設定選單</p>
+        </div>
+    </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const joyBase = document.getElementById('joy-base');
-        const joyHandle = document.getElementById('joy-handle');
-        const jumpBtn = document.getElementById('jump-btn');
-        const overlay = document.getElementById('overlay');
-        const winContent = document.getElementById('win-content');
-        const resetBtn = document.getElementById('reset-btn');
-
-        const GRAVITY = 0.65;
-        const JUMP_FORCE = -13.5;
-        const SPEED = 5.5;
+        const textInput = document.getElementById('textInput');
+        const colorInput = document.getElementById('colorInput');
+        const bgColorInput = document.getElementById('bgColorInput');
+        const sizeInput = document.getElementById('sizeInput');
+        const speedInput = document.getElementById('speedInput');
         
-        let isRunning = true;
-        let isWin = false;
-        let inputX = 0;
-        let platforms = [];
-        let goal = { x: 0, y: 0, w: 8, h: 80 };
-        let joystickTouchId = null;
+        const marqueeText = document.getElementById('marqueeText');
+        const sizeValueDisplay = document.getElementById('sizeValue');
+        const speedValueDisplay = document.getElementById('speedValue');
+        const body = document.body;
+        const controls = document.getElementById('controls');
+        const displayArea = document.getElementById('displayArea');
+        const toggleBtn = document.getElementById('toggleBtn');
 
-        let fireworks = [];
-        let particles = [];
+        // 更新文字內容
+        textInput.addEventListener('input', () => {
+            marqueeText.innerText = textInput.value || ' ';
+        });
 
-        class Firework {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = canvas.height;
-                this.targetY = Math.random() * (canvas.height * 0.45);
-                this.speed = 9 + Math.random() * 5;
-                this.color = `hsl(${Math.random() * 360}, 100%, 65%)`;
-                this.alive = true;
-            }
-            update() {
-                this.y -= this.speed;
-                if (this.y <= this.targetY) {
-                    this.explode();
-                    this.alive = false;
-                }
-            }
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            explode() {
-                for (let i = 0; i < 60; i++) {
-                    particles.push(new Particle(this.x, this.y, this.color));
-                }
-            }
+        // 更新文字顏色
+        colorInput.addEventListener('input', () => {
+            marqueeText.style.color = colorInput.value;
+        });
+
+        // 更新背景顏色
+        bgColorInput.addEventListener('input', () => {
+            body.style.backgroundColor = bgColorInput.value;
+            // 讓控制面板保持半透明對比
+            controls.style.backgroundColor = bgColorInput.value === '#000000' ? 'rgba(17, 24, 39, 0.95)' : bgColorInput.value + 'F2';
+        });
+
+        // 更新大小
+        sizeInput.addEventListener('input', () => {
+            const size = sizeInput.value + 'vh';
+            marqueeText.style.fontSize = size;
+            sizeValueDisplay.innerText = size;
+        });
+
+        // 更新速度
+        speedInput.addEventListener('input', () => {
+            const val = parseInt(speedInput.value);
+            let label = "中";
+            if (val < 8) label = "極慢";
+            else if (val < 13) label = "慢";
+            else if (val < 19) label = "快";
+            else label = "極快";
+            
+            speedValueDisplay.innerText = label;
+            
+            // 速度換算：30s 到 1s
+            const duration = 31 - val;
+            marqueeText.style.setProperty('--duration', `${duration}s`);
+        });
+
+        // 切換控制面板
+        function toggleControls() {
+            document.body.classList.toggle('controls-hidden');
         }
 
-        class Particle {
-            constructor(x, y, color) {
-                this.x = x;
-                this.y = y;
-                this.color = color;
-                const angle = Math.random() * Math.PI * 2;
-                const force = Math.random() * 7;
-                this.vx = Math.cos(angle) * force;
-                this.vy = Math.sin(angle) * force;
-                this.alpha = 1;
-                this.decay = 0.01 + Math.random() * 0.02;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vy += 0.12;
-                this.alpha -= this.decay;
-            }
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = this.alpha;
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-        }
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleControls();
+        });
 
-        const player = {
-            x: 0, y: 0, w: 32, h: 48, vx: 0, vy: 0, grounded: false,
-            color: '#f472b6',
-            update() {
-                this.vx = inputX * SPEED;
-                this.vy += GRAVITY;
-                this.x += this.vx;
-                this.resolveCollision('x');
-                this.y += this.vy;
-                this.resolveCollision('y');
-                if (this.x < 0) this.x = 0;
-                if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
-                if (this.y > canvas.height) finish(false);
-            },
-            resolveCollision(axis) {
-                this.grounded = false;
-                for (let p of platforms) {
-                    if (this.x < p.x + p.w && this.x + this.w > p.x &&
-                        this.y < p.y + p.h && this.y + this.h > p.y) {
-                        if (axis === 'x') {
-                            if (this.vx > 0) this.x = p.x - this.w;
-                            if (this.vx < 0) this.x = p.x + p.w;
-                        } else {
-                            if (this.vy > 0) {
-                                this.y = p.y - this.h;
-                                this.vy = 0;
-                                this.grounded = true;
-                            } else if (this.vy < 0) {
-                                this.y = p.y + p.h;
-                                this.vy = 0;
-                            }
-                        }
-                    }
-                }
-            },
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.roundRect(this.x, this.y, this.w, this.h, 8);
-                ctx.fill();
-                ctx.fillStyle = '#fff';
-                const eyeX = inputX >= 0 ? this.x + this.w - 10 : this.x + 2;
-                ctx.fillRect(eyeX, this.y + 12, 8, 8);
-            }
-        };
-
-        function init() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const w = canvas.width;
-            const h = canvas.height;
-            platforms = [
-                { x: 30, y: h - 120, w: 180, h: 120, type: 'main' },
-                { x: 250, y: h - 210, w: 80, h: 25, type: 'box' },
-                { x: 100, y: h - 305, w: 80, h: 25, type: 'box' },
-                { x: 280, y: h - 400, w: 80, h: 25, type: 'box' },
-                { x: 120, y: h - 495, w: 80, h: 25, type: 'box' },
-                { x: w * 0.45, y: h - 550, w: 120, h: 25, type: 'box' },
-                { x: w - 280, y: h * 0.42, w: 70, h: 25, type: 'box' },
-                { x: w - 160, y: h * 0.25, w: 160, h: 30, type: 'main' }
-            ];
-            goal = { x: w - 70, y: h * 0.25 - 80, w: 8, h: 80 };
-            player.x = 60;
-            player.y = h - 180;
-            player.vx = 0;
-            player.vy = 0;
-            fireworks = [];
-            particles = [];
-            isWin = false;
-        }
-
-        // 觸控邏輯
-        joyBase.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.changedTouches[0];
-            joystickTouchId = touch.identifier;
-            updateJoystick(touch);
-        }, { passive: false });
-        window.addEventListener('touchmove', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
-                if (touch.identifier === joystickTouchId) updateJoystick(touch);
-            }
-        }, { passive: false });
-        window.addEventListener('touchend', (e) => {
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                if (e.changedTouches[i].identifier === joystickTouchId) {
-                    joystickTouchId = null;
-                    inputX = 0;
-                    joyHandle.style.transform = 'translate(-50%, -50%)';
-                }
+        displayArea.addEventListener('click', () => {
+            if (document.body.classList.contains('controls-hidden')) {
+                toggleControls();
             }
         });
-        function updateJoystick(touch) {
-            const rect = joyBase.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const dist = touch.clientX - centerX;
-            const limit = rect.width / 2;
-            const clamped = Math.max(-limit, Math.min(limit, dist));
-            joyHandle.style.transform = `translate(calc(-50% + ${clamped}px), -50%)`;
-            inputX = clamped / limit;
-        }
-        jumpBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            if (player.grounded) player.vy = JUMP_FORCE;
-        }, { passive: false });
-        jumpBtn.addEventListener('mousedown', () => { if (player.grounded) player.vy = JUMP_FORCE; });
 
-        function finish(win) {
-            isRunning = false;
-            isWin = win;
-            overlay.style.display = 'flex';
-            if (win) {
-                winContent.classList.remove('hidden');
-            } else {
-                winContent.classList.add('hidden');
-            }
+        // 初始化樣式設定
+        function init() {
+            marqueeText.style.color = colorInput.value;
+            marqueeText.style.fontSize = sizeInput.value + 'vh';
+            const duration = 31 - speedInput.value;
+            marqueeText.style.setProperty('--duration', `${duration}s`);
+            body.style.backgroundColor = bgColorInput.value;
         }
 
-        resetBtn.onclick = () => {
-            init();
-            isRunning = true;
-            overlay.style.display = 'none';
-            gameLoop();
-        };
-
-        function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            if (isWin) {
-                if (Math.random() < 0.08) fireworks.push(new Firework());
-                fireworks = fireworks.filter(f => f.alive);
-                fireworks.forEach(f => { f.update(); f.draw(); });
-                particles = particles.filter(p => p.alpha > 0);
-                particles.forEach(p => { p.update(); p.draw(); });
-            }
-
-            ctx.fillStyle = 'rgba(244, 114, 182, 0.05)';
-            for(let i=0; i<canvas.width; i+=100) {
-                for(let j=0; j<canvas.height; j+=100) {
-                    ctx.beginPath();
-                    ctx.arc(i + Math.cos(Date.now()*0.001 + j)*10, j, 1, 0, Math.PI*2);
-                    ctx.fill();
-                }
-            }
-
-            platforms.forEach(p => {
-                ctx.fillStyle = p.type === 'main' ? '#0f172a' : '#1e293b';
-                ctx.beginPath();
-                ctx.roundRect(p.x, p.y, p.w, p.h, 6);
-                ctx.fill();
-                ctx.fillStyle = '#f472b6';
-                ctx.fillRect(p.x, p.y, p.w, 4);
-            });
-
-            ctx.fillStyle = '#fbbf24';
-            ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
-            ctx.beginPath();
-            ctx.moveTo(goal.x + goal.w, goal.y);
-            ctx.lineTo(goal.x + goal.w + 35, goal.y + 25);
-            ctx.lineTo(goal.x + goal.w, goal.y + 50);
-            ctx.fill();
-
-            player.draw();
-        }
-
-        function gameLoop() {
-            if (!isRunning && !isWin) return;
-            if (isRunning) player.update();
-            render();
-            if (isRunning && player.x + player.w > goal.x && 
-                player.x < goal.x + 40 && 
-                player.y < goal.y + goal.h && 
-                player.y + player.h > goal.y) {
-                finish(true);
-            }
-            requestAnimationFrame(gameLoop);
-        }
-
-        window.addEventListener('resize', init);
-        init();
-        gameLoop();
+        window.onload = init;
     </script>
 </body>
 </html>
